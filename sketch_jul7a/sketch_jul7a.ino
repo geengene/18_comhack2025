@@ -55,7 +55,7 @@ void setup()
   tft.println("Initializing...");
 }
 
-void sendFormData(float temperature, int moisture)
+void sendFormData(float temperature, int moisture) // this is function for post request to api
 {
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo))
