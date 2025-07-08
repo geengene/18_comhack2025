@@ -8,8 +8,8 @@
 #include <Adafruit_ST7789.h>
 #include <SPI.h>
 
-const char *ssid = "wifi name";
-const char *password = "wifi password";
+const char *ssid = "connec";
+const char *password = "manydevices";
 
 // NTP time config for SG time
 const char *ntpServer = "pool.ntp.org";
@@ -22,23 +22,21 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 // LCD pins
-#define TFT_CS 16   // GPIO16 (D0)
-#define TFT_RST 12  // GPIO12 (D6)
-#define TFT_DC 15   // GPIO15 (D8)
-#define TFT_MOSI 13 // GPIO13 (D7)
-#define TFT_SCLK 14 // GPIO14 (D5)
+#define TFT_CS 16    // GPIO16 (D0)
+#define TFT_RST 12   // GPIO12 (D6)
+#define TFT_DC 15    // GPIO15 (D8)
+#define TFT_MOSI 13  // GPIO13 (D7)
+#define TFT_SCLK 14  // GPIO14 (D5)
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   delay(1000);
   sensors.begin();
 
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED)
-  {
+  while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
@@ -55,11 +53,10 @@ void setup()
   tft.println("Initializing...");
 }
 
-void sendFormData(float temperature, int moisture) // this is function for post request to api
+void sendFormData(float temperature, int moisture)  // this is function for post request to api
 {
   struct tm timeinfo;
-  if (!getLocalTime(&timeinfo))
-  {
+  if (!getLocalTime(&timeinfo)) {
     Serial.println("Failed to get time");
     return;
   }
@@ -94,14 +91,11 @@ void sendFormData(float temperature, int moisture) // this is function for post 
 
   int httpCode = http.POST((uint8_t *)payload.c_str(), payload.length());
 
-  if (httpCode > 0)
-  {
+  if (httpCode > 0) {
     String response = http.getString();
     Serial.println("Data sent successfully:");
     Serial.println(response);
-  }
-  else
-  {
+  } else {
     Serial.print("POST failed. HTTP code: ");
     Serial.println(httpCode);
   }
@@ -109,8 +103,7 @@ void sendFormData(float temperature, int moisture) // this is function for post 
   http.end();
 }
 
-void loop()
-{
+void loop() {
   int moistureRaw = analogRead(A0);
   // convert to percentage (adjust based on calibration)
   const int moisture_dry = 1024;
@@ -125,12 +118,9 @@ void loop()
   Serial.print("Soil Moisture: ");
   Serial.print(moisture);
   Serial.print("% | Temperature: ");
-  if (temp == DEVICE_DISCONNECTED_C)
-  {
-    Serial.println("Error reading temperature");
-  }
-  else
-  {
+  if (temp == DEVICE_DISCONNECTED_C) {
+    Serial.println("Read error");
+  } else {
     Serial.print(temp);
     Serial.println(" °C");
   }
@@ -162,17 +152,23 @@ void loop()
   tft.print("Temperature:");
   tft.setTextSize(3);
   tft.setCursor(10, 180);
-  if (temp == DEVICE_DISCONNECTED_C)
-  {
+  if (temp == DEVICE_DISCONNECTED_C) {
     tft.print("Read Error");
-  }
-  else
-  {
+    delay(5000);
+    return;
+  } else {
     tft.print(temp);
     tft.print(" C");
   }
 
+  if (isnan(temp) || isnan(moisture)) {
+    Serial.println("Failed to read from sensors!");
+    delay(10000);
+    return;
+  }
+
   sendFormData(temp, moisture);
 
-  delay(5000); // refreshes and sends form data every 5 seconds
+
+  delay(5000);  // refreshes and sends form data every 5 seconds
 }
