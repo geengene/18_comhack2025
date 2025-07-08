@@ -89,7 +89,7 @@ void sendFormData(float temperature, int moisture) // this is function for post 
   WiFiClientSecure client;
   client.setInsecure();
 
-  http.begin(client, "https://team-21.vercel.app/api");
+  http.begin(client, "api route");
   http.addHeader("Content-Type", "multipart/form-data; boundary=" + boundary);
 
   int httpCode = http.POST((uint8_t *)payload.c_str(), payload.length());
